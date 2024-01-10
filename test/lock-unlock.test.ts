@@ -116,7 +116,7 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
     collectPartialConfig1
   );
 
-  // console.log(collectPartialUnsigned1);
+  console.log(collectPartialUnsigned1);
   expect(collectPartialUnsigned1.type).toBe("ok");
 
   if (collectPartialUnsigned1.type == "error") return;
