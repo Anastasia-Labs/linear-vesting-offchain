@@ -1,4 +1,4 @@
-import { Address, Assets, OutRef, UTxO } from "@anastasia-labs/lucid-cardano-fork"
+import { Address, Assets, OutRef } from "@anastasia-labs/lucid-cardano-fork"
 
 export type CborHex = string;
 export type RawHex = string;
@@ -17,6 +17,12 @@ export type AssetClass = {
   tokenName: string;
 };
 
+export type ContractConfig = {
+    vesting : CborHex
+}
+
+export type LockTokensScripts = Pick<ContractConfig,"vesting">
+
 export type LockTokensConfig = {
   beneficiary: Address;
   vestingAsset: AssetClass;
@@ -25,16 +31,12 @@ export type LockTokensConfig = {
   vestingPeriodEnd: POSIXTime;
   firstUnlockPossibleAfter: POSIXTime;
   totalInstallments: number;
-  scripts: {
-    vesting: CborHex;
-  };
 };
+
+export type CollectPartialScripts = Pick<ContractConfig, "vesting">
 
 export type CollectPartialConfig = {
   vestingOutRef: OutRef;
-  scripts: {
-    vesting: CborHex;
-  };
   currentTime?: POSIXTime;
 };
 

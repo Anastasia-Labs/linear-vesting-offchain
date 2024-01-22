@@ -20,7 +20,7 @@
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ nodejs pnpm ];
+          packages = with pkgs; [ nodejs pnpm bun ];
 
           shellHook = ''
             echo "node `${pkgs.nodejs}/bin/node --version`"
