@@ -8,9 +8,11 @@ import {
   getAddressDetails,
   Lucid,
   SpendingValidator,
-} from "@anastasia-labs/lucid-cardano-fork"
+} from "@anastasia-labs/lucid-cardano-fork";
 import { AddressD } from "../contract.types.js";
 import { Either, ReadableUTxO, Result } from "../types.js";
+import { Either as E, pipe } from "effect";
+import { InvalidDatumError, MissingDatumError } from "../errors.js";
 
 export const utxosAtScript = async (
   lucid: Lucid,
@@ -31,6 +33,23 @@ export const utxosAtScript = async (
 
   return lucid.utxosAt(scriptValidatorAddr);
 };
+
+export const safeParseDatum = <T>(
+  datum: string | null | undefined,
+  datumType: T
+) =>
+  pipe(
+    datum,
+    E.fromNullable(() => new MissingDatumError()),
+    E.flatMap((d) =>
+      E.try({
+        try: () => {
+          return Data.from(d, datumType);
+        },
+        catch: (_e) => new InvalidDatumError()
+      })
+    )
+  );
 
 export const parseSafeDatum = <T>(
   lucid: Lucid,

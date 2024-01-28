@@ -7,6 +7,9 @@ import {
 } from "../src/index.js";
 import { beforeEach, expect, test } from "vitest";
 import { Contract } from "../src/endpoints/Contract.js";
+import { pipe } from "effect";
+import { submitAction } from "./helpers.js";
+import { Effect, Either } from "effect";
 
 type LucidContext = {
   lucid: Lucid;
@@ -40,6 +43,8 @@ beforeEach<LucidContext>(async (context) => {
 
   context.emulator = new Emulator(accounts);
 
+  context.lucid = await Lucid.new(context.emulator);
+
   context.users = await Promise.all(
     accounts.map(async (account) => {
       return Contract.withLucid(
@@ -52,125 +57,94 @@ beforeEach<LucidContext>(async (context) => {
 });
 
 test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
+  lucid,
   users,
   emulator,
 }) => {
-  const lockVestingUnSigned = await users[0]
-    .lockTokens({
-      beneficiary: await users[1].lucid.wallet.address(),
-      vestingAsset: {
-        policyId: "2c04fa26b36a376440b0615a7cdf1a0c2df061df89c8c055e2650505",
-        tokenName: "63425443",
-      },
-      totalVestingQty: 10_000_000,
-      vestingPeriodStart: emulator.now(),
-      vestingPeriodEnd: emulator.now() + TWENTY_FOUR_HOURS_MS,
-      firstUnlockPossibleAfter: emulator.now(),
-      totalInstallments: 4,
-    })
-    .build();
+  await pipe(
+    await users[0]
+      .lockTokens({
+        beneficiary: await users[1].lucid.wallet.address(),
+        vestingAsset: {
+          policyId: "2c04fa26b36a376440b0615a7cdf1a0c2df061df89c8c055e2650505",
+          tokenName: "63425443",
+        },
+        totalVestingQty: 10_000_000,
+        vestingPeriodStart: emulator.now(),
+        vestingPeriodEnd: emulator.now() + TWENTY_FOUR_HOURS_MS,
+        firstUnlockPossibleAfter: emulator.now(),
+        totalInstallments: 4,
+      })
+      .build(),
+    submitAction
+  );
 
-  expect(lockVestingUnSigned.type).toBe("ok");
-  if (lockVestingUnSigned.type == "ok") {
-    await (await lockVestingUnSigned.data.sign().complete()).submit();
-  }
-
-  //NOTE: INSTALLMENT 1
+  // //NOTE: INSTALLMENT 1
   emulator.awaitBlock(1080);
 
-  const utxosAtVesting1 = await users[1].getVestedTokens();
-  // console.log("utxosAtVesting1", utxosAtVesting1);
-  // console.log("utxos at wallet", await lucid.utxosAt(users.account2.address));
-  // console.log("INSTALLMENT 1");
+  // emulator.awaitBlock(10);
+  // console.log(
+  //   await pipe(
+  //     users[1]
+  //       .collectVestingTokens({
+  //         vestingOutRef: (await users[1].getVestedTokens())[0].outRef,
+  //         currentTime: emulator.now(),
+  //       })
+  //       .unsafeBuild()
+  //   )
+  // );
 
-  const collectPartialUnsigned1 = await users[1]
-    .collectVestingTokens({
-      vestingOutRef: utxosAtVesting1[0].outRef,
-      currentTime: emulator.now(),
-    })
-    .build();
-
-  // console.log(collectPartialUnsigned1);
-  expect(collectPartialUnsigned1.type).toBe("ok");
-
-  if (collectPartialUnsigned1.type == "error") return;
-  // console.log(tx.data.txComplete.to_json())
-  await (await collectPartialUnsigned1.data.sign().complete()).submit();
-
-  //NOTE: INSTALLMENT 2
   emulator.awaitBlock(1080);
+  const tx1 = await pipe(
+    users[1]
+      .collectVestingTokens({
+        vestingOutRef: (await users[1].getVestedTokens())[0].outRef,
+        currentTime: emulator.now(),
+      })
+      .program(),
+    Effect.andThen((tx) => Effect.promise(() => tx.sign().complete())),
+    Effect.andThen((tx) => Effect.promise(() => tx.submit())),
+    Effect.either,
+    Effect.runPromise
+  );
+  expect(Either.isRight(tx1)).toBe(true);
 
-  const utxosAtVesting2 = await users[1].getVestedTokens();
-  // console.log("utxosAtVesting2", utxosAtVesting2);
-
-  // console.log("utxos at wallet", await lucid.utxosAt(users.account2.address));
-  // console.log("INSTALLMENT 2");
-
-  const collectPartialUnsigned2 = await users[1]
-    .collectVestingTokens({
-      vestingOutRef: utxosAtVesting2[0].outRef,
-      currentTime: emulator.now(),
-    })
-    .build();
-
-  // console.log(collectPartialUnsigned);
-  expect(collectPartialUnsigned2.type).toBe("ok");
-
-  if (collectPartialUnsigned2.type == "error") return;
-  // console.log(tx.data.txComplete.to_json())
-  await (await collectPartialUnsigned2.data.sign().complete()).submit();
-
-  //NOTE: INSTALLMENT 3
-  emulator.awaitBlock(1080);
-
-  const utxosAtVesting3 = await users[1].getVestedTokens();
-  // console.log("utxosAtVesting3", utxosAtVesting3);
-
-  // console.log("utxos at wallet", await lucid.utxosAt(users.account2.address));
-  // console.log("INSTALLMENT 3");
-
-  const collectPartialUnsigned3 = await users[1]
-    .collectVestingTokens({
-      vestingOutRef: utxosAtVesting3[0].outRef,
-      currentTime: emulator.now(),
-    })
-    .build();
-
-  // console.log(collectPartialUnsigned);
-  expect(collectPartialUnsigned3.type).toBe("ok");
-
-  if (collectPartialUnsigned3.type == "error") return;
-  // console.log(tx.data.txComplete.to_json())
-  await (await collectPartialUnsigned3.data.sign().complete()).submit();
-
-  //NOTE: INSTALLMENT 4
   emulator.awaitBlock(1081);
 
-  const utxosAtVesting4 = await users[1].getVestedTokens();
-  // console.log("utxosAtVesting4", utxosAtVesting4);
+  const tx2 = await pipe(
+    users[1]
+      .collectVestingTokens({
+        vestingOutRef: (await users[1].getVestedTokens())[0].outRef,
+        currentTime: emulator.now(),
+      })
+      .program(),
+    Effect.andThen((tx) => Effect.promise(() => tx.sign().complete())),
+    Effect.andThen((tx) => Effect.promise(() => tx.submit())),
+    Effect.either,
+    Effect.runPromise
+  );
+  expect(Either.isRight(tx2)).toBe(true);
 
-  // console.log("utxos at wallet", await lucid.utxosAt(users.account2.address));
-  // console.log("INSTALLMENT 4");
+  emulator.awaitBlock(1080);
+  const tx3 = await pipe(
+    users[1]
+      .collectVestingTokens({
+        vestingOutRef: (await users[1].getVestedTokens())[0].outRef,
+        currentTime: emulator.now(),
+      })
+      .program(),
+    Effect.andThen((tx) => Effect.promise(() => tx.sign().complete())),
+    Effect.andThen((tx) => Effect.promise(() => tx.submit())),
+    Effect.either,
+    Effect.runPromise
+  );
+  expect(Either.isRight(tx3)).toBe(true);
 
-  const collectPartialUnsigned4 = await users[1]
-    .collectVestingTokens({
-      vestingOutRef: utxosAtVesting4[0].outRef,
-      currentTime: emulator.now(),
-    })
-    .build();
+  emulator.awaitBlock(10);
 
-  // console.log(collectPartialUnsigned4);
-  expect(collectPartialUnsigned4.type).toBe("ok");
-  if (collectPartialUnsigned4.type == "error") return;
-  // console.log(tx.data.txComplete.to_json())
-  await (await collectPartialUnsigned4.data.sign().complete()).submit();
+  console.log(await users[1].lucid.wallet.getUtxos());
 
-  emulator.awaitBlock(180);
-
-  // console.log(
-  //   "utxosAtVesting",
-  //   await parseUTxOsAtScript(lucid, linearVesting.cborHex, VestingDatum)
-  // );
+  // expect(await users[1].getScriptUTxOs()).toStrictEqual([]);
   // console.log("utxos at wallet", await lucid.utxosAt(users.account2.address));
   // console.log(
   //   "utxos at protocol wallet",
