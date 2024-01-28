@@ -8,7 +8,6 @@ import {
 import { beforeEach, expect, test } from "vitest";
 import { Contract } from "../src/endpoints/Contract.js";
 import { pipe } from "effect";
-import { submitAction } from "./helpers.js";
 import { Effect, Either } from "effect";
 
 type LucidContext = {
