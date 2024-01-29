@@ -1,9 +1,6 @@
 import {
   ContractConfig,
-  LockTokensConfig,
   Lucid,
-  Result,
-  TxComplete,
   VestingDatum,
   collectVestingTokens,
   getVestingByAddress,
@@ -12,6 +9,7 @@ import {
 } from "../index.js";
 import linearVesting from "../../test/linearVesting.json" assert { type: "json" };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const withMesh = (_scripts: ContractConfig) => (mesh: string) => {
   return {
     lockTokens: () => {

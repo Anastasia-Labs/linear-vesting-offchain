@@ -60,8 +60,8 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
   users,
   emulator,
 }) => {
-  await pipe(
-    await users[0]
+  const tx0 = await pipe(
+    users[0]
       .lockTokens({
         beneficiary: await users[1].lucid.wallet.address(),
         vestingAsset: {
@@ -74,9 +74,13 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
         firstUnlockPossibleAfter: emulator.now(),
         totalInstallments: 4,
       })
-      .build(),
-    submitAction
+      .program(),
+    Effect.andThen((tx) => Effect.promise(() => tx.sign().complete())),
+    Effect.andThen((tx) => Effect.promise(() => tx.submit())),
+    Effect.either,
+    Effect.runPromise
   );
+  expect(Either.isRight(tx0)).toBe(true);
 
   // //NOTE: INSTALLMENT 1
   emulator.awaitBlock(1080);

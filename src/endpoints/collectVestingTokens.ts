@@ -8,7 +8,7 @@ import { divCeil, safeParseDatum, toAddress } from "../core/utils/utils.js";
 import { CollectPartialConfig, CollectPartialScripts } from "../core/types.js";
 import { VestingRedeemer, VestingDatum } from "../core/contract.types.js";
 import { TIME_TOLERANCE_MS } from "../index.js";
-import { Effect, Either } from "effect";
+import { Effect } from "effect";
 import { TransactionError } from "../core/errors.js";
 
 export const collectVestingTokens =

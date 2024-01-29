@@ -1,5 +1,8 @@
-import {Data} from "effect"
+import { Data } from "effect";
 export class NoUTXOsInScriptError {
+  readonly _tag = "NoUTXOsInScriptError";
+}
+export class NoUTXOsInWallet {
   readonly _tag = "NoUTXOsInScriptError";
 }
 export class MissingDatumError {
@@ -10,7 +13,10 @@ export class InvalidDatumError {
   readonly _tag = "InvalidDatumError";
 }
 
-export class TransactionError extends Data.TaggedError("TransactionError")<{
-  message: string
+export class FromAddressError extends Data.TaggedError("FromAddressError")<{
+  message: string;
 }> {}
 
+export class TransactionError extends Data.TaggedError("TransactionError")<{
+  message: string;
+}> {}
