@@ -1,6 +1,5 @@
 import {
   LucidEvolution,
-  SpendingValidator,
   Data,
   TxSignBuilder,
   toUnit,
@@ -15,6 +14,7 @@ import {
   PROTOCOL_FEE,
   PROTOCOL_PAYMENT_KEY,
   PROTOCOL_STAKE_KEY,
+  vestingValidator,
 } from "../index.js";
 
 export const lockTokens = async (
@@ -23,10 +23,6 @@ export const lockTokens = async (
 ): Promise<Result<TxSignBuilder>> => {
   const network = lucid.config().network ?? "Preview";
 
-  const vestingValidator: SpendingValidator = {
-    type: "PlutusV2",
-    script: config.scripts.vesting,
-  };
   const validatorAddress = validatorToAddress(network, vestingValidator);
 
   const protocolFee = Math.ceil(config.totalVestingQty * PROTOCOL_FEE);

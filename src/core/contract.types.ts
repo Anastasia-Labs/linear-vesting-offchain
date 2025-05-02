@@ -49,7 +49,6 @@ export const AssetClassSchema = Data.Object(
     symbol: Data.Bytes(),
     name: Data.Bytes(),
   },
-  { hasConstr: false }
 );
 export type AssetClassD = Data.Static<typeof AssetClassSchema>;
 export const AssetClassD = AssetClassSchema as unknown as AssetClassD;

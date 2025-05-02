@@ -10,9 +10,9 @@ import {
   LucidEvolution,
   toUnit,
   TWENTY_FOUR_HOURS_MS,
+  vestingValidator,
 } from "../src/index.js"
 import { beforeEach, expect, test } from "vitest";
-import linearVesting from "./linearVesting.json" assert { type: "json" };
 
 type LucidContext = {
   lucid: LucidEvolution;
@@ -71,9 +71,6 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
     vestingPeriodEnd: emulator.now() + TWENTY_FOUR_HOURS_MS,
     firstUnlockPossibleAfter: emulator.now(),
     totalInstallments: 4,
-    scripts: {
-      vesting: linearVesting.cborHex,
-    },
   };
   console.log("LOCK VESTING CONFIG", lockVestingConfig);
 
@@ -92,14 +89,11 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
   const utxosAtVesting1 = await getVestingByAddress(
     lucid,
     users.account2.address,
-    linearVesting.cborHex
+    vestingValidator.script
   );
 
   const collectPartialConfig1: CollectPartialConfig = {
     vestingOutRef: utxosAtVesting1[0].outRef,
-    scripts: {
-      vesting: linearVesting.cborHex,
-    },
     currentTime: emulator.now(),
   };
 
@@ -124,14 +118,11 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
   const utxosAtVesting2 = await getVestingByAddress(
     lucid,
     users.account2.address,
-    linearVesting.cborHex
+    vestingValidator.script
   );
   
   const collectPartialConfig2: CollectPartialConfig = {
     vestingOutRef: utxosAtVesting2[0].outRef,
-    scripts: {
-      vesting: linearVesting.cborHex,
-    },
     currentTime: emulator.now(),
   };
 
@@ -156,14 +147,11 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
   const utxosAtVesting3 = await getVestingByAddress(
     lucid,
     users.account2.address,
-    linearVesting.cborHex
+    vestingValidator.script
   );
 
   const collectPartialConfig3: CollectPartialConfig = {
     vestingOutRef: utxosAtVesting3[0].outRef,
-    scripts: {
-      vesting: linearVesting.cborHex,
-    },
     currentTime: emulator.now(),
   };
 
@@ -188,14 +176,11 @@ test<LucidContext>("Test - LockTokens, Unlock Tokens", async ({
   const utxosAtVesting4 = await getVestingByAddress(
     lucid,
     users.account2.address,
-    linearVesting.cborHex
+    vestingValidator.script
   );
 
   const collectPartialConfig4: CollectPartialConfig = {
     vestingOutRef: utxosAtVesting4[0].outRef,
-    scripts: {
-      vesting: linearVesting.cborHex,
-    },
     currentTime: emulator.now(),
   };
 
