@@ -102,7 +102,7 @@ export const collectVestingTokens = async (
         )
         .addSigner(beneficiaryAddress)
         .validFrom(lowerBound)
-        // .validTo(upperBound)
+        .validTo(upperBound)
         .complete();
       return { type: "ok", data: tx };
     }
