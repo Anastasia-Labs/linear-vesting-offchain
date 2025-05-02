@@ -1,7 +1,6 @@
 import {
   Data,
   LucidEvolution,
-  SpendingValidator,
   toUnit,
   TxSignBuilder,
   validatorToAddress,
@@ -9,7 +8,7 @@ import {
 import { divCeil, parseSafeDatum, toAddress } from "../core/utils/utils.js";
 import { CollectPartialConfig, Result } from "../core/types.js";
 import { VestingRedeemer, VestingDatum } from "../core/contract.types.js";
-import { TIME_TOLERANCE_MS } from "../index.js";
+import { TIME_TOLERANCE_MS, vestingValidator } from "../index.js";
 
 export const collectVestingTokens = async (
   lucid: LucidEvolution,
@@ -18,11 +17,6 @@ export const collectVestingTokens = async (
   const network = lucid.config().network ?? "Preview";
 
   config.currentTime ??= Date.now();
-
-  const vestingValidator: SpendingValidator = {
-    type: "PlutusV2",
-    script: config.scripts.vesting,
-  };
 
   const vestingValidatorAddress =
     validatorToAddress(network, vestingValidator);
@@ -108,7 +102,7 @@ export const collectVestingTokens = async (
         )
         .addSigner(beneficiaryAddress)
         .validFrom(lowerBound)
-        .validTo(upperBound)
+        // .validTo(upperBound)
         .complete();
       return { type: "ok", data: tx };
     }

@@ -25,16 +25,10 @@ export type LockTokensConfig = {
   vestingPeriodEnd: POSIXTime;
   firstUnlockPossibleAfter: POSIXTime;
   totalInstallments: number;
-  scripts: {
-    vesting: CborHex;
-  };
 };
 
 export type CollectPartialConfig = {
   vestingOutRef: OutRef;
-  scripts: {
-    vesting: CborHex;
-  };
   currentTime?: POSIXTime;
 };
 
